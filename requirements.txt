@@ -4,3 +4,4 @@ torch
 Pillow
 accelerate
 tf-keras
+kaggle
