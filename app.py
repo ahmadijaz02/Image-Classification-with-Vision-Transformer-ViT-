@@ -6,12 +6,8 @@ import os
 import zipfile
 import sys
 
-# --- CONFIGURATION ---
-# Kaggle dataset details (from your link)
-# --- UPDATED KAGGLE DATASET PATH ---
+
 KAGGLE_DATASET = "ahmadijaz92/genai-p3-t3" 
-# The name of the folder *inside* the Kaggle dataset
-# This is the specific checkpoint folder we want to load
 MODEL_PATH = "vit-base-food101-results/checkpoint-3552"
 
 def download_model_from_kaggle():
@@ -19,12 +15,10 @@ def download_model_from_kaggle():
     Checks if the model checkpoint is downloaded. If not, downloads it from Kaggle
     using Streamlit secrets.
     """
-    # 1. Check if the specific model checkpoint path already exists
     if os.path.exists(MODEL_PATH):
         st.write("Model directory already exists. Skipping download.")
         return
 
-    # 2. Check for Streamlit secrets
     if 'KAGGLE_USERNAME' not in st.secrets or 'KAGGLE_KEY' not in st.secrets:
         st.error("Kaggle credentials not found in Streamlit secrets.")
         st.error("Please add KAGGLE_USERNAME and KAGGLE_KEY to your app's secrets.")
@@ -36,13 +30,11 @@ def download_model_from_kaggle():
     os.environ['KAGGLE_USERNAME'] = st.secrets['KAGGLE_USERNAME']
     os.environ['KAGGLE_KEY'] = st.secrets['KAGGLE_KEY']
 
-    # 4. Import Kaggle API and download
     try:
         from kaggle.api.kaggle_api_extended import KaggleApi
         api = KaggleApi()
         api.authenticate()
 
-        # Download and unzip the dataset files into the current directory
         api.dataset_download_files(KAGGLE_DATASET, path='.', unzip=True)
         
         st.success(f"Model files downloaded and unzipped (including '{MODEL_PATH}')")
@@ -63,15 +55,13 @@ def load_model_pipeline():
         return None
     
     try:
-        # Load the processor
         image_processor = AutoImageProcessor.from_pretrained(MODEL_PATH)
-        
-        # Load the pipeline
+
         pipe = pipeline(
             "image-classification",
             model=MODEL_PATH,
             image_processor=image_processor,
-            device="cuda" if torch.cuda.is_available() else "cpu" # Use GPU if available
+            device="cuda" if torch.cuda.is_available() else "cpu" 
         )
         st.write("Model loaded successfully!")
         return pipe
@@ -79,7 +69,6 @@ def load_model_pipeline():
         st.error(f"Error loading model: {e}")
         return None
 
-# --- Streamlit App UI ---
 
 st.set_page_config(
     page_title="Food Image Classifier",
@@ -94,39 +83,28 @@ st.write(
 )
 st.write(f"This app uses a fine-tuned ViT model from Kaggle (`{KAGGLE_DATASET}`).")
 
-# 1. Download the model (runs only if model isn't downloaded)
 download_model_from_kaggle()
 
-# 2. Load the model from the local directory
 classifier = load_model_pipeline()
 
-# --- File Uploader ---
 uploaded_file = st.file_uploader("Choose a food image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None and classifier is not None:
-    # Open the image
     image = Image.open(uploaded_file).convert("RGB")
     
-    # Display the uploaded image
     st.image(image, caption="Uploaded Image", use_column_width=True)
     
-    # --- Classification ---
-    st.write("") # Add a little space
+    st.write("") 
     with st.spinner("Analyzing the image..."):
         try:
-            # Get predictions
             predictions = classifier(image)
-            
-            # Get the top prediction
             top_pred = predictions[0]
             label = top_pred['label'].replace("_", " ").title()
             score = top_pred['score']
             
-            # Display the result
             st.success(f"**Prediction: {label}**")
             st.info(f"**Confidence:** {score:.2%}")
-            
-            # (Optional) Show top 5 predictions in an expandable section
+
             with st.expander("Show Top 5 Predictions"):
                 st.dataframe(predictions)
                 
@@ -139,4 +117,3 @@ elif uploaded_file is None and classifier is not None:
 elif classifier is None:
     st.error("Failed to load the model. The app cannot continue.")
     st.stop()
-
