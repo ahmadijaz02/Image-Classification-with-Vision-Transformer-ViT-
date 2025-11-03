@@ -8,11 +8,10 @@ import sys
 
 # --- CONFIGURATION ---
 # Kaggle dataset details (from your link)
-KAGGLE_DATASET = "ahmadijaz92/genai-project3"
+# --- UPDATED KAGGLE DATASET PATH ---
+KAGGLE_DATASET = "ahmadijaz92/genai-p3-t3" 
 # The name of the folder *inside* the Kaggle dataset
 # This is the specific checkpoint folder we want to load
-# --- FIXED PATH ---
-# Added 'final_model/' prefix to match your Kaggle dataset structure
 MODEL_PATH = "vit-base-food101-results/checkpoint-3552"
 
 def download_model_from_kaggle():
